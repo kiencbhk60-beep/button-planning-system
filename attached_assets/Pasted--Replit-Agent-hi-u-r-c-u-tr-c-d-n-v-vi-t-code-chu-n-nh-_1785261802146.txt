@@ -1,0 +1,17 @@
+
+Để Replit Agent hiểu rõ cấu trúc dự án và viết code chuẩn nhất, bạn hãy copy toàn bộ đoạn text trong khung dưới đây và dán vào cửa sổ chat của Replit nhé:
+Khung Lệnh Dành Cho Replit Agent
+> Yêu cầu: Hãy viết một API endpoint bằng Node.js/TypeScript để xử lý upload và đọc file Excel cho hệ thống quản lý sản xuất. Đặt file route này trong artifacts/api-server/src/routes/import.ts.
+> Chi tiết kỹ thuật & Luồng xử lý:
+>  * Nhận file: Sử dụng thư viện multer (cấu hình memoryStorage để không lưu rác ra ổ cứng) để nhận một request POST /api/import/upload. Request sử dụng multipart/form-data, bao gồm trường file (file Excel) và file_type (chuỗi text).
+>  * Đọc Excel: Sử dụng thư viện xlsx để đọc file.buffer. Lấy Sheet đầu tiên và dùng hàm XLSX.utils.sheet_to_json để chuyển dữ liệu thành mảng JSON.
+>  * Làm sạch dữ liệu cơ bản: Xóa bỏ các dòng trắng hoàn toàn. Đặc biệt, vì hệ thống thường xuyên nhận các file xuất thô trực tiếp từ các hệ thống ERP (như SAP), hãy viết thêm một hàm helper nhỏ để trim (xóa khoảng trắng thừa) ở tất cả các tên cột (keys) để tránh lỗi không map được dữ liệu.
+>  * Ghi Database (Staging): Sử dụng Drizzle ORM để tạo một bản ghi mới vào bảng import_sessions với các thông tin: file_name, file_type, file_size_kb (tính từ bytes), row_count (độ dài mảng JSON), và status = 'pending'.
+>  * Response: Trả về HTTP 200 với JSON bao gồm session_id vừa tạo và một mảng preview_data (chỉ lấy 5 dòng đầu tiên của mảng JSON) để trả về cho Frontend làm chức năng xem trước (preview).
+>  * Bắt lỗi: Bọc toàn bộ logic trong try-catch. Trả về HTTP 400 nếu file không đúng định dạng (.xlsx, .xls) hoặc không có file được gửi lên.
+> 
+Tại sao Prompt này hiệu quả?
+ * Dùng memoryStorage: File Excel xuất ra để báo cáo cá nhân thường không quá nặng (chỉ vài MB). Việc nạp thẳng vào RAM (memory buffer) rồi đọc sẽ cực kỳ nhanh và tránh việc server Replit bị đầy ổ cứng do lưu trữ file tạm.
+ * Xử lý đặc thù file hệ thống: Những file xuất từ các hệ thống quản trị kho thường bị lỗi font ẩn hoặc dính dấu cách thừa ở tiêu đề cột (Ví dụ: " Mã Hàng " thay vì "Mã Hàng"). Lệnh làm sạch key sẽ giúp Drizzle ORM và Zod sau này dễ dàng nhận diện và validate hơn.
+ * Trả về Preview Data: Việc chỉ trả về 5 dòng đầu tiên giúp băng thông API siêu nhẹ, đủ để bạn hiển thị một bảng dữ liệu nhỏ trên web cho phép bạn xác nhận lại (confirm) trước khi cho phép hệ thống ghi hàng loạt vào database.
+Bạn muốn thử đưa lệnh này cho Replit chạy luôn để xem kết quả trả về, hay muốn mình viết tiếp đoạn code định nghĩa các Schema bằng Zod để chuẩn bị cho bước map từng cột dữ liệu?
