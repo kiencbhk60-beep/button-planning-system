@@ -1,0 +1,21 @@
+> Yêu cầu: Hệ thống của tôi cần một API endpoint GET /api/reports/dashboard viết bằng Node.js và Drizzle ORM để tổng hợp số liệu từ 4 luồng dữ liệu Excel thành 1 bản báo cáo duy nhất.
+> 1. Bối cảnh 4 bảng dữ liệu:
+>  * ke_hoach_dap_cuc: Bảng gốc chứa thông tin đơn hàng (khsx, so, ma_hang, so_luong_ke_hoach).
+>  * sap_export (BTP đầu vào): Dữ liệu thu gia công BTP trước dập (chứa btp_ton_kho, btp_da_xuat).
+>  * san_luong_nha_may (Tiến độ thực tế): Dữ liệu dập cúc mỗi ngày (chứa so_luong_thuc_te).
+>  * lich_dong_cont (Đầu ra): Lịch đóng container (chứa ngay_dong_cont).
+> 2. Logic SQL Tổng hợp:
+> Hãy viết query bằng Drizzle ORM, lấy bảng ke_hoach_dap_cuc làm bảng chính. Thực hiện LEFT JOIN với 3 bảng còn lại dựa trên khóa (khsx, so, ma_hang).
+> Lưu ý quan trọng: Để tránh lỗi duplicate row khi JOIN, hãy sử dụng cơ chế Subquery hoặc CTE (Common Table Expressions) để Group và Sum dữ liệu trước khi JOIN:
+>  * Subquery 1 (BTP): GROUP BY khsx, so, ma_hang, lấy SUM(btp_ton_kho + btp_da_xuat) AS tong_btp_thu_ve.
+>  * Subquery 2 (Sản lượng): GROUP BY khsx, so, ma_hang, lấy SUM(so_luong_thuc_te) AS tong_san_luong.
+>  * Subquery 3 (Lịch cont): GROUP BY khsx, so, ma_hang, lấy MIN(ngay_dong_cont) AS deadline_cont.
+> 3. Các trường tính toán (Calculated Fields) & Cờ cảnh báo (Alert Flags):
+> Sau khi query xong, hãy map dữ liệu và trả về JSON có thêm các cột sau cho Frontend xử lý giao diện:
+>  * san_luong_con_lai = so_luong_ke_hoach - tong_san_luong
+>  * is_thieu_btp_alert: Nếu tong_btp_thu_ve < so_luong_ke_hoach, trả về true (Cảnh báo: Thiếu BTP gia công trước dập).
+>  * is_deadline_alert: Nếu san_luong_con_lai > 0 VÀ deadline_cont cách thời điểm hiện tại <= 3 ngày, trả về true (Cảnh báo: Trễ tiến độ đóng cont).
+> Bọc toàn bộ trong try-catch, trả về HTTP 200 kèm data, hoặc HTTP 500 kèm lỗi chi tiết.
+> 
+Khi Replit hoàn thành API này, nó sẽ trả về cho bạn một cục JSON chứa đầy đủ thông tin: Mã hàng A cần dập bao nhiêu, BTP đã về đủ chưa, đã dập được bao nhiêu, còn bao lâu thì phải giao, và có bị gán cờ is_thieu_btp_alert hay is_deadline_alert không.
+
