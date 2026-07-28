@@ -95,7 +95,11 @@ router.post(
       }
     }
 
-    // 3. Parse Excel từ buffer trong RAM
+    // 3. Đọc header_row từ form (mặc định 1 — dòng đầu tiên)
+    const rawHeaderRow = (req.body as { header_row?: string }).header_row;
+    const headerRow = rawHeaderRow ? Math.max(1, parseInt(rawHeaderRow, 10) || 1) : 1;
+
+    // 4. Parse Excel từ buffer trong RAM
     let rows: Record<string, unknown>[];
     try {
       const workbook = XLSX.read(req.file.buffer, { type: "buffer", cellDates: true });
@@ -105,8 +109,10 @@ router.post(
         return;
       }
       const sheet = workbook.Sheets[firstSheetName];
+      // range: headerRow - 1 chuyển từ 1-indexed (người dùng) sang 0-indexed (xlsx)
       const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
         defval: null,
+        range: headerRow - 1,
       });
 
       // 4. Làm sạch: trim key + xóa dòng trống hoàn toàn
