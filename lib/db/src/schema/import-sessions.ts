@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, integer, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, integer, text, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -27,6 +27,7 @@ export const importSessionsTable = pgTable("import_sessions", {
   rowCount: integer("row_count"),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   errorMessage: text("error_message"),
+  rawData: jsonb("raw_data"),  // JSON rows từ Excel — xoá sau khi confirm
   importedAt: timestamp("imported_at", { withTimezone: true }).notNull().defaultNow(),
   confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
   notes: text("notes"),

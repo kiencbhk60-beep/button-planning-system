@@ -122,7 +122,7 @@ router.post(
       return;
     }
 
-    // 5. Ghi session vào DB với status = 'pending'
+    // 5. Ghi session vào DB với status = 'pending' + lưu toàn bộ rows vào raw_data
     const fileSizeKb = Math.ceil(req.file.size / 1024);
     const [session] = await db
       .insert(importSessionsTable)
@@ -132,6 +132,7 @@ router.post(
         fileSizeKb,
         rowCount: rows.length,
         status: "pending",
+        rawData: rows, // JSON rows để confirm endpoint đọc lại
       })
       .returning();
 
