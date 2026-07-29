@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd artifacts/mockup-sandbox && pnpm build",
+  "outputDirectory": "artifacts/mockup-sandbox/dist",
+  "framework": "vite"
+}
